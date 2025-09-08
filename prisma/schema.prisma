@@ -15,20 +15,20 @@ model Device {
     createdAt DateTime @default(now())
     lastSeen  DateTime @default(now())
 
-    positions Position[]
+    positions Position[] @relation("DeviceToPositions")
 
     @@map("devices")
 }
 
 model Position {
     id        String   @id @default(auto()) @map("_id") @db.ObjectId
-    deviceId  String   @db.ObjectId
+    deviceId  String
     latitude  Float
     longitude Float
     speed     Float?
     timestamp DateTime @default(now())
 
-    device Device @relation(fields: [deviceId], references: [id])
+    device Device @relation("DeviceToPositions", fields: [deviceId], references: [deviceId])
 
     @@map("positions")
 }
