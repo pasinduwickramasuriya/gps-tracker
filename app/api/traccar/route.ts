@@ -14,8 +14,6 @@ export async function POST(request: Request) {
     const body: TraccarBody = await request.json()
     const { id, lat, lon, speed, timestamp } = body
 
-    console.log('📡 Received from Traccar:', { id, lat, lon })
-
     if (!id || lat === undefined || lon === undefined) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
@@ -23,14 +21,8 @@ export async function POST(request: Request) {
     // Create or update device
     await prisma.device.upsert({
       where: { deviceId: id },
-      update: {
-        lastSeen: new Date(),
-        isActive: true,
-      },
-      create: {
-        deviceId: id,
-        name: `Device ${id}`,
-      },
+      update: { lastSeen: new Date(), isActive: true },
+      create: { deviceId: id, name: `Device ${id}` },
     })
 
     // Save position
@@ -44,10 +36,8 @@ export async function POST(request: Request) {
       },
     })
 
-    console.log(`✅ Location saved for ${id}`)
     return NextResponse.json({ success: true })
   } catch (error: unknown) {
-    console.error('❌ Error:', error)
     return NextResponse.json({ error: 'Server error' }, { status: 500 })
   }
 }

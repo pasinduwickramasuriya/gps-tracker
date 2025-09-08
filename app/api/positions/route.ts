@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { Device } from '@/lib/types'
 
 export async function GET() {
   try {
@@ -13,12 +14,13 @@ export async function GET() {
       },
     })
 
-    const devicesWithPosition = devices.map(device => ({
+    const devicesWithPosition: Device[] = devices.map(device => ({
       id: device.id,
       deviceId: device.deviceId,
       name: device.name,
       isActive: device.isActive,
       lastSeen: device.lastSeen,
+      positions: device.positions,
       latestPosition: device.positions[0] || null,
     }))
 

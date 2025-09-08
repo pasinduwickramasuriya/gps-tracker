@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { Device } from '@/lib/types'
 
 export async function GET() {
   try {
@@ -13,7 +14,7 @@ export async function GET() {
       orderBy: { createdAt: 'desc' },
     })
 
-    return NextResponse.json(devices)
+    return NextResponse.json(devices as Device[])
   } catch (error: unknown) {
     return NextResponse.json({ error: 'Failed to fetch devices' }, { status: 500 })
   }
@@ -21,10 +22,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const { deviceId, name } = (await request.json()) as {
-      deviceId: string
-      name: string
-    }
+    const { deviceId, name } = (await request.json()) as Pick<Device, 'deviceId' | 'name'>
 
     if (!deviceId || !name) {
       return NextResponse.json({ error: 'Device ID and name required' }, { status: 400 })

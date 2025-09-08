@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { Device } from '@/lib/types'
 
 interface Params {
   params: { id: string }
@@ -21,7 +22,7 @@ export async function GET(request: Request, { params }: Params) {
       return NextResponse.json({ error: 'Device not found' }, { status: 404 })
     }
 
-    return NextResponse.json(device)
+    return NextResponse.json(device as Device)
   } catch (error: unknown) {
     return NextResponse.json({ error: 'Failed to fetch device' }, { status: 500 })
   }
@@ -29,10 +30,7 @@ export async function GET(request: Request, { params }: Params) {
 
 export async function PUT(request: Request, { params }: Params) {
   try {
-    const { name, isActive } = (await request.json()) as {
-      name?: string
-      isActive?: boolean
-    }
+    const { name, isActive } = (await request.json()) as Partial<Device>
 
     const device = await prisma.device.update({
       where: { id: params.id },
@@ -42,7 +40,7 @@ export async function PUT(request: Request, { params }: Params) {
       },
     })
 
-    return NextResponse.json(device)
+    return NextResponse.json(device as Device)
   } catch (error: unknown) {
     return NextResponse.json({ error: 'Failed to update device' }, { status: 500 })
   }
