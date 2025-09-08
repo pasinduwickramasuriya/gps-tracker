@@ -3,6 +3,27 @@
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { Device } from "@/lib/types";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
+import {
+  Search,
+  MapPin,
+  Smartphone,
+  Activity,
+  RefreshCw,
+  Loader2,
+  Gauge,
+  Clock,
+  Signal,
+} from "lucide-react";
 
 // Lazy load Leaflet components (no SSR)
 const MapContainer = dynamic(
@@ -25,12 +46,16 @@ export default function LiveMap() {
   const [devices, setDevices] = useState<Device[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoaded, setIsLoaded] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
 
   useEffect(() => {
     setIsLoaded(true);
     fetchPositions();
 
-    const interval = setInterval(fetchPositions, 5000);
+    const interval = setInterval(() => {
+      fetchPositions();
+      setLastUpdate(new Date());
+    }, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -41,14 +66,23 @@ export default function LiveMap() {
       setDevices(data);
     } catch (error) {
       console.error("Error fetching positions:", error);
+      toast.error("Failed to fetch device positions");
     }
   };
 
   if (!isLoaded) {
     return (
-      <div className="h-96 bg-gray-100 flex items-center justify-center rounded-lg">
-        <div className="text-lg">Loading Map... 🗺️</div>
-      </div>
+      <Card>
+        <CardContent className="flex items-center justify-center py-16">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <div className="flex items-center gap-2 text-lg">
+              <MapPin className="h-5 w-5" />
+              <span>Loading Map...</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -69,83 +103,162 @@ export default function LiveMap() {
     return [20.5937, 78.9629]; // Default (India)
   };
 
+  const devicesWithLocation = devices.filter((d) => d.latestPosition);
+
   return (
-    <div className="w-full">
+    <div className="w-full space-y-4">
       {/* Search Bar */}
-      <div className="mb-4">
-        <input
-          type="text"
-          placeholder="🔍 Search devices by name or ID..."
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-      </div>
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Search className="h-5 w-5" />
+            Device Search
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="relative">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Search devices by name or ID..."
+              className="pl-10"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Map */}
-      <div className="h-96 w-full rounded-lg overflow-hidden border-2 border-gray-200">
-        <MapContainer center={getCenter()} zoom={12} className="h-full w-full">
-          <TileLayer
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          />
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <MapPin className="h-5 w-5" />
+                Live Tracking Map
+              </CardTitle>
+              <CardDescription>
+                Real-time GPS positions with {devicesWithLocation.length} active
+                device{devicesWithLocation.length !== 1 ? "s" : ""}
+              </CardDescription>
+            </div>
+            <Badge variant="outline" className="gap-1">
+              <Signal className="h-3 w-3" />
+              LIVE
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="h-96 w-full rounded-lg overflow-hidden border">
+            <MapContainer
+              center={getCenter()}
+              zoom={12}
+              className="h-full w-full"
+            >
+              <TileLayer
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              />
 
-          {filteredDevices.map((device) => {
-            if (!device.latestPosition) return null;
+              {filteredDevices.map((device) => {
+                if (!device.latestPosition) return null;
 
-            const { latitude, longitude, speed, timestamp } =
-              device.latestPosition;
+                const { latitude, longitude, speed, timestamp } =
+                  device.latestPosition;
 
-            return (
-              <Marker key={device.id} position={[latitude, longitude]}>
-                <Popup>
-                  <div className="p-2 min-w-48">
-                    <h3 className="font-bold text-lg mb-2">{device.name}</h3>
-                    <div className="space-y-1 text-sm">
-                      <p>
-                        <strong>Device ID:</strong> {device.deviceId}
-                      </p>
-                      <p>
-                        <strong>Location:</strong> {latitude.toFixed(6)},{" "}
-                        {longitude.toFixed(6)}
-                      </p>
-                      <p>
-                        <strong>Speed:</strong> {Math.round(speed || 0)} km/h
-                      </p>
-                      <p>
-                        <strong>Last Update:</strong>{" "}
-                        {new Date(timestamp).toLocaleTimeString()}
-                      </p>
-                    </div>
-                    <div className="mt-2">
-                      <span className="px-2 py-1 bg-green-500 text-white text-xs rounded-full">
-                        🟢 LIVE
-                      </span>
-                    </div>
-                  </div>
-                </Popup>
-              </Marker>
-            );
-          })}
-        </MapContainer>
-      </div>
+                return (
+                  <Marker key={device.id} position={[latitude, longitude]}>
+                    <Popup>
+                      <div className="p-2 min-w-48 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h3 className="font-bold text-lg">{device.name}</h3>
+                          <Badge variant="default" className="gap-1">
+                            <Activity className="h-3 w-3" />
+                            LIVE
+                          </Badge>
+                        </div>
+
+                        <div className="space-y-2 text-sm">
+                          <div className="flex items-center gap-2">
+                            <Smartphone className="h-3 w-3 text-muted-foreground" />
+                            <span className="font-medium">Device ID:</span>
+                            <code className="text-xs bg-muted px-1 py-0.5 rounded">
+                              {device.deviceId}
+                            </code>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-3 w-3 text-muted-foreground" />
+                            <span className="font-medium">Location:</span>
+                            <span className="font-mono text-xs">
+                              {latitude.toFixed(6)}, {longitude.toFixed(6)}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <Gauge className="h-3 w-3 text-muted-foreground" />
+                            <span className="font-medium">Speed:</span>
+                            <Badge variant="secondary" className="text-xs">
+                              {Math.round(speed || 0)} km/h
+                            </Badge>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-3 w-3 text-muted-foreground" />
+                            <span className="font-medium">Updated:</span>
+                            <span className="text-xs">
+                              {new Date(timestamp).toLocaleTimeString()}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </Popup>
+                  </Marker>
+                );
+              })}
+            </MapContainer>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Status Bar */}
-      <div className="mt-4 flex justify-between items-center text-sm text-gray-600">
-        <div className="flex space-x-4">
-          <span>
-            📱 Total: <strong>{devices.length}</strong>
-          </span>
-          <span className="text-green-600">
-            🟢 With Location:{" "}
-            <strong>{devices.filter((d) => d.latestPosition).length}</strong>
-          </span>
-          <span>
-            🔍 Showing: <strong>{filteredDevices.length}</strong>
-          </span>
-        </div>
-        <span className="text-xs">🔄 Auto-refresh: 5s</span>
-      </div>
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex justify-between items-center">
+            <div className="flex gap-4">
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="gap-1">
+                  <Smartphone className="h-3 w-3" />
+                  Total: {devices.length}
+                </Badge>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Badge variant="default" className="gap-1">
+                  <Activity className="h-3 w-3" />
+                  With Location: {devicesWithLocation.length}
+                </Badge>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary" className="gap-1">
+                  <Search className="h-3 w-3" />
+                  Showing: {filteredDevices.length}
+                </Badge>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <RefreshCw className="h-3 w-3" />
+              <span>Auto-refresh: 5s</span>
+              <span className="text-xs">
+                • Last: {lastUpdate.toLocaleTimeString()}
+              </span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

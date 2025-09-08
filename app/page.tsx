@@ -1,70 +1,135 @@
 import Link from "next/link";
 import LiveMap from "./components/LiveMap";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  MapPin,
+  Settings,
+  Smartphone,
+  Server,
+  Clock,
+  Play,
+} from "lucide-react";
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="min-h-screen bg-background">
+      <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            📍 GPS Live Tracker
-          </h1>
-          <p className="text-xl text-gray-600 mb-6">
-            Real-time device tracking with search functionality
-          </p>
-          <Link
-            href="/admin"
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors inline-block"
-          >
-            🛠️ Admin Dashboard
-          </Link>
-        </div>
+        <Card className="text-center">
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <MapPin className="h-8 w-8 text-primary" />
+              <CardTitle className="text-4xl font-bold">
+                GPS Live Tracker
+              </CardTitle>
+            </div>
+            <p className="text-xl text-muted-foreground">
+              Real-time device tracking with search functionality
+            </p>
+          </CardHeader>
+          <CardContent>
+            <Button asChild size="lg" className="gap-2">
+              <Link href="/admin">
+                <Settings className="h-4 w-4" />
+                Admin Dashboard
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
 
         {/* Live Map */}
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">
-            🗺️ Live Tracking Map
-          </h2>
-          <LiveMap />
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-2xl">
+              <MapPin className="h-6 w-6" />
+              Live Tracking Map
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <LiveMap />
+          </CardContent>
+        </Card>
 
         {/* Setup Instructions */}
-        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h3 className="text-lg font-bold text-blue-900 mb-3">
-            📱 Traccar Client Setup
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-800">
-            <div>
-              <p className="mb-2">
-                <strong>1.</strong> Install Traccar Client on your phone
-              </p>
-              <p className="mb-2">
-                <strong>2.</strong> Open app settings
-              </p>
-              <p className="mb-2">
-                <strong>3.</strong> Set Device Identifier:{" "}
-                <code className="bg-blue-100 px-2 py-1 rounded">
-                  your-device-id
-                </code>
-              </p>
+        <Card className="border-primary/20 bg-primary/5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg text-primary">
+              <Smartphone className="h-5 w-5" />
+              Traccar Client Setup
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+              <div className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <Badge variant="secondary" className="text-xs mt-0.5">
+                    1
+                  </Badge>
+                  <span>Install Traccar Client on your phone</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Badge variant="secondary" className="text-xs mt-0.5">
+                    2
+                  </Badge>
+                  <span>Open app settings</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Badge variant="secondary" className="text-xs mt-0.5">
+                    3
+                  </Badge>
+                  <div>
+                    <span>Set Device Identifier:</span>
+                    <Badge variant="outline" className="ml-2 font-mono text-xs">
+                      your-device-id
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <Badge variant="secondary" className="text-xs mt-0.5">
+                    4
+                  </Badge>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Server className="h-3 w-3" />
+                      <span>Set Server URL:</span>
+                    </div>
+                    <Badge
+                      variant="outline"
+                      className="font-mono text-xs break-all"
+                    >
+                      http://YOUR-IP:3000/api/traccar
+                    </Badge>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Badge variant="secondary" className="text-xs mt-0.5">
+                    5
+                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-3 w-3" />
+                    <span>Set Frequency:</span>
+                    <Badge variant="default" className="text-xs">
+                      10 seconds
+                    </Badge>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Badge variant="secondary" className="text-xs mt-0.5">
+                    6
+                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Play className="h-3 w-3" />
+                    <span>Start service and see your device appear!</span>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div>
-              <p className="mb-2">
-                <strong>4.</strong> Set Server URL:{" "}
-                <code className="bg-blue-100 px-2 py-1 rounded text-xs">
-                  http://YOUR-IP:3000/api/traccar
-                </code>
-              </p>
-              <p className="mb-2">
-                <strong>5.</strong> Set Frequency: <strong>10 seconds</strong>
-              </p>
-              <p className="mb-2">
-                <strong>6.</strong> Start service and see your device appear!
-              </p>
-            </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
